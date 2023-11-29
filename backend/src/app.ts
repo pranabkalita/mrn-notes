@@ -1,21 +1,20 @@
 // Global Imports
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
+import bodyParser from "body-parser";
+import morgan from "morgan";
 
 // Local Config
-import NoteModel from "./models/note";
+import notesRouter from "./routes/notes";
 
 const app = express();
 
-app.get("/", async (req, res, next) => {
-  try {
-    const notes = await NoteModel.find().exec();
+// Body parser
+app.use(bodyParser.json());
+app.use(morgan("dev"));
 
-    res.status(200).json(notes);
-  } catch (error) {
-    next(error);
-  }
-});
+// Routes
+app.use("/api/notes", notesRouter);
 
 // No Route Found Handler
 app.use((req, res, next) => {
