@@ -3,6 +3,7 @@ import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
+import createHttpError, { isHttpError } from "http-errors";
 
 // Local Config
 import notesRouter from "./routes/notes";
@@ -18,7 +19,7 @@ app.use("/api/notes", notesRouter);
 
 // No Route Found Handler
 app.use((req, res, next) => {
-  next(Error("Endpoint not found !"));
+  next(createHttpError(404, "Endpoint not found !"));
 });
 
 // Express Error Handler
@@ -27,9 +28,14 @@ app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
   console.error(error);
 
   let errorMessage = "An unknown error occurred";
-  if (error instanceof Error) errorMessage = error.message;
+  let statusCode = 500;
 
-  res.status(500).json({
+  if (isHttpError(error)) {
+    statusCode = error.status;
+    errorMessage = error.message;
+  }
+
+  res.status(statusCode).json({
     error: errorMessage,
   });
 });
